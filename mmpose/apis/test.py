@@ -26,19 +26,22 @@ def single_gpu_test(model, data_loader):
 
     model.eval()
     results = []
+    filenames = []
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
     for data in data_loader:
         with torch.no_grad():
             result = model(return_loss=False, **data)
         results.append(result)
-
+        img_metas = data['img_metas'].data[0]
+        filename = [img_meta['image_file'] for img_meta in img_metas]
+        filenames.append(filename)
         # use the first key as main key to calculate the batch size
         batch_size = len(next(iter(data.values())))
         for _ in range(batch_size):
             prog_bar.update()
-    return results
-
+    return results, filenames
+  
 
 def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
     """Test model with multiple gpus.
